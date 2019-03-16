@@ -1,0 +1,63 @@
+---
+
+- name: check if go installed already
+  stat:
+    path: /usr/local/go/bin/go
+  register: go_file_details
+
+- name: download GO
+  become: true
+  get_url:
+    url: https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz
+    dest: /usr/local/
+  when: not go_file_details.stat.exists
+
+- name: Unarchive GO
+  become: true
+  unarchive:
+    src: /usr/local/go1.11.1.linux-amd64.tar.gz
+    dest: /usr/local/
+    remote_src: yes
+  when: not go_file_details.stat.exists
+
+- name: delete go tar file
+  become: true
+  file:
+    dest: /usr/local/go1.11.1.linux-amd64.tar.gz
+    state: absent
+  when: not go_file_details.stat.exists
+
+- name: Adding the path to bashrc
+  lineinfile:
+    path: /home/ubuntu/.bashrc
+      # /home/vagrant/.bashrc
+    line: 'export PATH=$PATH:/usr/local/go/bin'
+    insertafter: 'EOF'
+    state: present
+  when: not go_file_details.stat.exists
+
+- name: Adding the Go path to bashrc
+  lineinfile:
+    path: /home/ubuntu/.bashrc
+      # /home/vagrant/.bashrc
+    line: 'export GOPATH=/{{ destination }}/go'
+      # 'export GOPATH=/Vagrant/go'
+    insertafter: 'EOF'
+    state: present
+  when: not go_file_details.stat.exists
+
+- name: Source the bashrc file
+  shell: . /home/ubuntu/.bashrc
+  # /home/vagrant/.bashrc
+  when: not go_file_details.stat.exists
+
+- name: Start Go web
+  become: true
+  shell: "/usr/local/go/bin/go run /{{ destination }}/provisioners/roles/go/files/main.go &"
+  args:
+    executable: /bin/bash
+  when: start
+  tags:
+    - launch
+    # >/dev/null 2>&1
+#   # /vagrant/provisioners/roles/go/files/main.go
