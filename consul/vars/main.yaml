@@ -1,0 +1,8 @@
+---
+
+agent: server
+consul_server_ip: 192.168.33.10
+consul_client_ip: 192.168.33.11
+node_name: web
+start: true
+destination: cons_h

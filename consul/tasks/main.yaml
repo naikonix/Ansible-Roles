@@ -1,0 +1,86 @@
+---
+
+- name: check if consul already installed
+  stat:
+    path: /usr/local/bin/consul
+  register: consul_file_details
+
+- name: update apt cache
+  become: true
+  apt:
+    update_cache: true
+  when: not consul_file_details.stat.exists
+
+
+- name: Install dependencies
+  become: true
+  apt:
+    name: "{{ packages }}"
+    # state: latest
+  vars:
+    packages:
+      - unzip
+  when: not consul_file_details.stat.exists
+
+- name: download consul
+  become: true
+  get_url:
+    url: https://releases.hashicorp.com/consul/1.4.0/consul_1.4.0_linux_amd64.zip
+    dest: /usr/local/bin
+  when: not consul_file_details.stat.exists
+
+- name: Unarchive consul
+  become: true
+  unarchive:
+    src: /usr/local/bin/consul_1.4.0_linux_amd64.zip
+    dest: /usr/local/bin
+    remote_src: true
+  when: not consul_file_details.stat.exists
+
+- name: delete consul zip file
+  become: true
+  file:
+    dest: /usr/local/bin/consul_1.4.0_linux_amd64.zip
+    state: absent
+  when: not consul_file_details.stat.exists
+
+# - name: Verify consul installation
+#   shell: "consul --version"
+#   register: consul_version
+#
+# - name: check consul
+#   assert:
+#     that:
+#       - "'Consul' in consul_version.stdout"
+
+- name: Create Consul data directory
+  file:
+    path: /tmp/consul
+    state: directory
+    # owner: vagrant
+    # group: vagrant
+    mode: "u=rwX,g=rwX,o=rwX"
+
+- name: create directory for consul config files
+  file:
+    path: /tmp/consul.d/
+    state: directory
+    # mode: 0755
+    mode: "u=rwX,g=rwX,o=rwX"
+
+- name: move consul config template
+  template:
+    src: "/{{ destination }}/provisioners/roles/consul/templates/config.json.j2"
+    dest: /tmp/consul.d/config.json
+  tags:
+    - launch
+
+- name: launch consul agent
+  become: true
+  shell: consul agent '-config-dir=/tmp/consul.d' &
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when: start
+  tags:
+    - launch

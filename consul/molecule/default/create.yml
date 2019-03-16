@@ -1,0 +1,26 @@
+---
+- name: create
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Create instance
+      molecule_vagrant:
+        instance_name: vagrant
+        instance_interfaces:
+          - auto_config: true
+            ip: 192.168.33.10
+            network_name: private_network
+            type: static
+        platform_box: ubuntu/xenial64
+        provider_name: virtualbox
+        provider_memory: 1024
+        provider_cpus: 4
+        instance_raw_config_args:
+          - "vm.network 'forwarded_port', guest: 80, host: 8888"
+        config_options:
+          synced_folder: true
+        provider_override_args:
+          - "vm.synced_folder '.', '/vagrant', type: 'rsync'"
+        provision: true
+        state: up

@@ -1,0 +1,59 @@
+---
+#consul template
+
+- name: check if consultemplate already installed
+  stat:
+    path: /usr/local/bin/consul-template
+  register: consul_template_file_details
+
+- name: update apt cache
+  become: true
+  apt:
+    update_cache: yes
+  when: not consul_template_file_details.stat.exists
+
+
+- name: Install dependencies
+  become: true
+  apt:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - unzip
+  when: not consul_template_file_details.stat.exists
+
+- name: download consul-template
+  become: true
+  get_url:
+    url: https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.zip
+    dest: /usr/local/bin
+  when: not consul_template_file_details.stat.exists
+
+- name: Unarchive consul-template
+  become: true
+  unarchive:
+    src: /usr/local/bin/consul-template_0.19.5_linux_amd64.zip
+    dest: /usr/local/bin
+    remote_src: yes
+  when: not consul_template_file_details.stat.exists
+
+- name: delete consul-template zip file
+  become: true
+  file:
+    dest: /usr/local/bin/consul-template_0.19.5_linux_amd64.zip
+    state: absent
+  when: not consul_template_file_details.stat.exists
+
+- name: run consul-template on nginx conf files
+  become: true
+  shell: "/usr/local/bin/consul-template -config /{{ destination }}/provisioners/roles/consultemplate/templates/nginx.consul-template.hcl &"
+  args:
+    executable: /bin/bash
+  # >/dev/null 2>&1 &
+  # async: 10
+  # poll: 0
+  # changed_when: false
+  when: start
+  tags:
+    - launch
