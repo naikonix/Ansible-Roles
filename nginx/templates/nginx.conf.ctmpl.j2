@@ -1,0 +1,21 @@
+
+events {}
+
+  http {
+
+    server{
+
+      listen 80;
+      server_name {{ nginx_server_ip }};
+
+      location = / {
+        return 200 "Hello from NGINX Proxy\n";
+
+      }
+      {{ '{{' }}range service "web"{{ '}}' }}
+      location = /web {
+        proxy_pass http://{{ '{{' }}.Address{{ '}}' }};
+      }
+      {{ '{{' }}end{{ '}}' }}
+    }
+  }

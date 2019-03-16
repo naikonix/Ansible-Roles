@@ -1,0 +1,9 @@
+---
+
+nginx_server_ip: 192.168.33.10
+
+proxy_pass_1: 192.168.33.11
+
+start: true
+
+destination: nginx_h
