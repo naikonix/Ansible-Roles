@@ -1,8 +1,7 @@
----
 
-- name: restart nginx
+- name: restart consul-template
   systemd:
     daemon_reload: yes
-    name: nginx
+    name: consul-template
     state: restarted
     enabled: yes

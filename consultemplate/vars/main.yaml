@@ -3,3 +3,7 @@
 start: true
 
 destination: ctemp_h
+
+consul_t_vers: 0.19.5
+consul_t_package_name: "consul-template_{{ consul_t_vers }}_linux_amd64.zip"
+consul_t_url: "https://releases.hashicorp.com/consul-template/{{ consul_t_vers }}/{{ consul_t_package_name }}"

@@ -25,14 +25,14 @@
 - name: download consul
   become: true
   get_url:
-    url: https://releases.hashicorp.com/consul/1.4.0/consul_1.4.0_linux_amd64.zip
+    url: "{{ consul_url }}"
     dest: /usr/local/bin
   when: not consul_file_details.stat.exists
 
 - name: Unarchive consul
   become: true
   unarchive:
-    src: /usr/local/bin/consul_1.4.0_linux_amd64.zip
+    src: "/usr/local/bin/{{ consul_package_name }}"
     dest: /usr/local/bin
     remote_src: true
   when: not consul_file_details.stat.exists
@@ -40,7 +40,7 @@
 - name: delete consul zip file
   become: true
   file:
-    dest: /usr/local/bin/consul_1.4.0_linux_amd64.zip
+    dest: "/usr/local/bin/{{ consul_package_name }}"
     state: absent
   when: not consul_file_details.stat.exists
 
@@ -75,12 +75,43 @@
   tags:
     - launch
 
-- name: launch consul agent
-  become: true
-  shell: consul agent '-config-dir=/tmp/consul.d' &
+- name: Render consul Systemd Config
+  template:
+    src: "/{{ destination }}/provisioners/roles/consul/templates/consul.systemd.j2"
+    dest: /etc/systemd/system/consul.service
+    mode: 0644
+  notify: restart consul
+
+- name: ensure consul handler started
+  meta: flush_handlers
+
+- name: wait for consul api port before setting key/value
+  wait_for:
+    port: 8500
+    delay: 15
+    timeout: 300
+    state: started
+  when: agent == 'server'
+
+- name: setup key/value store for active nginx weightings
+  command: "sudo curl -X PUT -d '1' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ item_w }}"
   args:
-    executable: /bin/bash
-  changed_when: false
-  when: start
-  tags:
-    - launch
+    warn: false
+  with_items: "{{ weight_web_list }}"
+  loop_control:
+    loop_var: item_w
+  when: agent == 'server' and active_profile_web == item_w | regex_search(active_profile_web)
+
+- name: setup key/value store for non-active nginx weightings
+  command: "sudo curl -X PUT -d '0' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ item_a }}"
+  args:
+    warn: false
+  with_items: "{{ weight_web_list }}"
+  loop_control:
+    loop_var: item_a
+  when: agent == 'server' and active_profile_web != item_a | regex_search(active_profile_web)
+
+- name: setup key/value store to switch between splash and weighted main
+  command: "sudo curl -X PUT -d '0' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ start_web }}"
+  args:
+    warn: false

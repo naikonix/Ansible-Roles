@@ -19,30 +19,6 @@
     update_cache: yes
   when: not nginx_file_details.stat.exists
 
-- name: Start Nginx
-  service:
-    name: nginx
-    state: started
-  when: start
-  tags:
-    - launch
-
-- name: delete existing nginx.conf file
-  become: true
-  file:
-    dest: /etc/nginx/nginx.conf
-    state: absent
-
-# - name: copy nginx.conf consul template
-#   become: true
-#   copy:
-#     src: /terraform/roles/nginx/files/nginx.conf.ctmpl
-#       # /vagrant/provisioners/roles/nginx/files/nginx.conf.ctmpl
-#     dest: /etc/nginx/nginx.conf.ctmpl
-#     # owner: vagrant
-#     # group: vagrant
-#     remote_src: yes
-
 - name: copy nginx.conf template
   become: true
   template:
@@ -50,3 +26,10 @@
     dest: /etc/nginx/nginx.conf.ctmpl
   tags:
     - launch
+
+- name: Render nginx Systemd Config
+  template:
+    src: "/{{ destination }}/provisioners/roles/nginx/templates/nginx.systemd.j2"
+    dest: /etc/systemd/system/nginx.service
+    mode: 0644
+  notify: restart nginx

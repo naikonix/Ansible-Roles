@@ -26,14 +26,14 @@
 - name: download consul-template
   become: true
   get_url:
-    url: https://releases.hashicorp.com/consul-template/0.19.5/consul-template_0.19.5_linux_amd64.zip
+    url: "{{ consul_t_url }}"
     dest: /usr/local/bin
   when: not consul_template_file_details.stat.exists
 
 - name: Unarchive consul-template
   become: true
   unarchive:
-    src: /usr/local/bin/consul-template_0.19.5_linux_amd64.zip
+    src: "/usr/local/bin/{{ consul_t_package_name }}"
     dest: /usr/local/bin
     remote_src: yes
   when: not consul_template_file_details.stat.exists
@@ -41,19 +41,13 @@
 - name: delete consul-template zip file
   become: true
   file:
-    dest: /usr/local/bin/consul-template_0.19.5_linux_amd64.zip
+    dest: "/usr/local/bin/{{ consul_t_package_name }}"
     state: absent
   when: not consul_template_file_details.stat.exists
 
-- name: run consul-template on nginx conf files
-  become: true
-  shell: "/usr/local/bin/consul-template -config /{{ destination }}/provisioners/roles/consultemplate/templates/nginx.consul-template.hcl &"
-  args:
-    executable: /bin/bash
-  # >/dev/null 2>&1 &
-  # async: 10
-  # poll: 0
-  # changed_when: false
-  when: start
-  tags:
-    - launch
+- name: Render consultemplate Systemd Config
+  template:
+    src: "/{{ destination }}/provisioners/roles/consultemplate/templates/consultemplate.systemd.j2"
+    dest: /etc/systemd/system/consul-template.service
+    mode: 0644
+  notify: restart consul-template

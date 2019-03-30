@@ -1,0 +1,35 @@
+---
+
+- name: create user groups
+  group:
+    name: "{{ item }}"
+  loop: "{{ user_groups_create }}"
+
+- name: add user
+  user:
+    name: "{{ user_name }}"
+    groups: "{{ groups_add_user }}"
+    state: present
+    shell: "{{ user_shell }}"
+    system: "{{ system_user }}"
+    createhome: "{{ home_create }}"
+    home: "/home/{{ user_name }}"
+  tags:
+    - adduser
+
+- name: remove user
+  user:
+    name: "{{ user_name }}"
+    state: absent
+    remove: yes
+  tags:
+    - removeuser
+
+- name: create ssh key for user
+  user:
+    name: "{{ user_name }}"
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+  tags:
+    - createkey

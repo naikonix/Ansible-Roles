@@ -3,3 +3,13 @@
 start: true
 
 destination: go_h
+
+site_location: /sites/go/
+
+go_vers: 1.11.1
+go_package_name: "go{{ go_vers }}.linux-amd64.tar.gz"
+go_url: "https://dl.google.com/go/{{ go_package_name }}"
+
+name_web: w
+
+port: 80

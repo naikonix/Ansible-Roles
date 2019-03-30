@@ -40,15 +40,26 @@ error_log /var/log/nginx/error.log;
     tcp_nopush on; #allows tcp to optimise
     # profile_web_active
     upstream main {
-      {% for item in name_web_list %}
+      {% for item in service_web_list %}
         {{ '{{' }}if ne {{ '(' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list[loop.index0] }}{{'"'}} {{'"'}}0{{'"'}}{{ ')' }} {{'"'}}0{{'"'}} {{ '}}' }}
-               server {{ item }}.tf.local weight={{ '{{' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list[loop.index0] }}{{'"'}} {{'"'}}1{{'"'}} {{ '}}' }};
+            {{ '{{' }}range service {{'"'}}{{ item }}{{'"'}}{{ '}}' }}
+               server {{ '{{' }}.Address{{ '}}' }}{{ '{{' }}end{{ '}}' }} weight={{ '{{' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list[loop.index0] }}{{'"'}} {{'"'}}1{{'"'}} {{ '}}' }};
           {{ '{{' }}end{{ '}}' }}
       {% endfor %}
     }
+    {% set itm = namespace(it = nil) %}
+    {% set unt = namespace(un = nil) %}
     {% for item in location_web_list %}
       upstream {{ item }} {
-        server {{ name_web_list[loop.index0] }}.tf.local;
+        {% set itm.it = item %}
+        {% for unit in name_web_list %}
+          {% set unt.un = unit %}
+          {% if unt.un == itm.it %}
+            {{ '{{' }}range service {{'"'}}{{ service_web_list[loop.index0] }}{{'"'}}{{ '}}' }}
+               server {{ '{{' }}.Address{{ '}}' }};
+             {{ '{{' }}end{{ '}}' }}
+          {% endif %}
+        {% endfor %}
       }
     {% endfor %}
 
@@ -64,16 +75,11 @@ error_log /var/log/nginx/error.log;
         return 200 "Hello from NGINX Proxy\n";
       {{ '{{' }}else if eq {{ '(' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ start_web }}{{'"'}} {{'"'}}0{{'"'}}{{ ')' }} {{'"'}}1{{'"'}} {{ '}}' }}
         proxy_pass http://main;
-        proxy_set_header Host $http_host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
       {{ '{{' }}end{{ '}}' }}
       }
       {% for item in location_web_list %}
       location = /{{ item }} {
         proxy_pass http://{{ item }};
-        proxy_set_header Host {{ name_web_list[loop.index0] }}.tf.local;
       }
       {% endfor %}
 

@@ -7,3 +7,21 @@ proxy_pass_1: 192.168.33.11
 start: true
 
 destination: nginx_h
+
+site_location: /sites/go/
+
+name_web_list: w
+
+service_web_list: w
+
+location_web_list: w
+
+weight_web_list: w
+
+profile_web_active: w
+
+kv_path_web: w
+
+start_web: w
+
+name_alb: w

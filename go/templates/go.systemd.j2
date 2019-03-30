@@ -1,0 +1,17 @@
+[Unit]
+Description="Go web app"
+Requires=network-online.target
+After=network-online.target
+ConditionFileNotEmpty={{ site_location }}/files/main.go
+
+[Service]
+User=root
+Group=root
+ExecStart=/usr/local/go/bin/go run {{ site_location }}/files/main.go
+ExecReload=/usr/local/bin/go reload
+KillMode=process
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
