@@ -25,3 +25,5 @@ kv_path_web: w
 start_web: w
 
 name_alb: w
+
+zone_dns: w

@@ -58,7 +58,7 @@ error_log /var/log/nginx/error.log;
         server_name {{ nginx_server_ip }};
         location / {
           proxy_pass http://{{ name_alb }};
-          proxy_set_header Host {{ name_web_list[loop.index0] }}.tf.local;
+          proxy_set_header Host {{ name_web_list[loop.index0] }}.{{ zone_dns }};
         }
       }
     {{ '{{' }}end{{ '}}' }}
@@ -76,7 +76,7 @@ error_log /var/log/nginx/error.log;
 
     {% for item in location_web_list %}
       upstream {{ item }} {
-        server {{ name_web_list[loop.index0] }}.tf.local;
+        server {{ name_web_list[loop.index0] }}.{{ zone_dns }};
       }
     {% endfor %}
 
@@ -103,7 +103,7 @@ error_log /var/log/nginx/error.log;
       {% for item in location_web_list %}
       location = /{{ item }} {
         proxy_pass http://{{ item }};
-        proxy_set_header Host {{ name_web_list[loop.index0] }}.tf.local;
+        proxy_set_header Host {{ name_web_list[loop.index0] }}.{{ zone_dns }};
       }
       {% endfor %}
 
