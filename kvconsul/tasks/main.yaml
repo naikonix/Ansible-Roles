@@ -1,0 +1,32 @@
+---
+
+- name: set_fact variable remove [] "" from name_web_list
+  set_fact:
+    weight_list: "{{ weight_web_list | regex_replace('\"','') | regex_replace(']') | regex_replace('\\[') }}"
+
+- name: split set_fact variable remove [] "" from name_web_list
+  set_fact:
+    weight_web_list_: "{{ weight_list.split(',') }}"
+
+- name: setup key/value store for active nginx weightings
+  command: "sudo curl -X PUT -d '1' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ item_w }}"
+  args:
+    warn: false
+  with_items: "{{ weight_web_list_ }}"
+  loop_control:
+    loop_var: item_w
+  when: active_profile_web == item_w | regex_search(active_profile_web)
+
+- name: setup key/value store for non-active nginx weightings
+  command: "sudo curl -X PUT -d '0' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ item_a }}"
+  args:
+    warn: false
+  with_items: "{{ weight_web_list_ }}"
+  loop_control:
+    loop_var: item_a
+  when: active_profile_web != item_a | regex_search(active_profile_web)
+
+- name: setup key/value store to switch between splash and weighted main
+  command: "sudo curl -X PUT -d '0' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ start_web }}"
+  args:
+    warn: false

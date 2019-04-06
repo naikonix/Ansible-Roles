@@ -82,36 +82,5 @@
     mode: 0644
   notify: restart consul
 
-- name: ensure consul handler started
+- name: flush handlers
   meta: flush_handlers
-
-- name: wait for consul api port before setting key/value
-  wait_for:
-    port: 8500
-    delay: 15
-    timeout: 300
-    state: started
-  when: agent == 'server'
-
-- name: setup key/value store for active nginx weightings
-  command: "sudo curl -X PUT -d '1' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ item_w }}"
-  args:
-    warn: false
-  with_items: "{{ weight_web_list }}"
-  loop_control:
-    loop_var: item_w
-  when: agent == 'server' and active_profile_web == item_w | regex_search(active_profile_web)
-
-- name: setup key/value store for non-active nginx weightings
-  command: "sudo curl -X PUT -d '0' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ item_a }}"
-  args:
-    warn: false
-  with_items: "{{ weight_web_list }}"
-  loop_control:
-    loop_var: item_a
-  when: agent == 'server' and active_profile_web != item_a | regex_search(active_profile_web)
-
-- name: setup key/value store to switch between splash and weighted main
-  command: "sudo curl -X PUT -d '0' http://localhost:8500/v1/kv/{{ kv_path_web }}/{{ start_web }}"
-  args:
-    warn: false

@@ -1,0 +1,6 @@
+---
+agent: server
+weight_web_list: w
+active_profile_web: w
+kv_path_web: w
+start_web: w

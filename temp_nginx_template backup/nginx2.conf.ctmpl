@@ -1,3 +1,9 @@
+{{ name_web_list }}
+{{ name_web_list|replace("[", "")|replace("]", "")|replace("\"", "") }}
+{% set web_list = name_web_list|replace("[", "")|replace("]", "")|replace("\"", "") %}
+{{ web_list }}
+{% set list1 = web_list.split(',') %}
+index1: {{ list1[0] }} index2 {{ list1[1] }}
 
 worker_processes auto; # auto equals the number of cores (one process per core)
 # Max Connections = worker_processes x worker_connections

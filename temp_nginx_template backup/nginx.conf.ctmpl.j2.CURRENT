@@ -1,9 +1,3 @@
-{% set nwl = name_web_list|replace("[", "")|replace("]", "")|replace("\"", "") %}
-{% set name_web_list_ = nwl.split(',') %}
-{% set wwl = weight_web_list|replace("[", "")|replace("]", "")|replace("\"", "") %}
-{% set weight_web_list_ = wwl.split(',') %}
-{% set lwl = location_web_list|replace("[", "")|replace("]", "")|replace("\"", "") %}
-{% set location_web_list_ = lwl.split(',') %}
 
 worker_processes auto;
 
@@ -16,16 +10,7 @@ error_log /var/log/nginx/error.log;
   http {
     include mime.types;
 
-    log_format test
-        '"$request"'
-        '"$http_referer" "$host" '
-        '"$http_host" "$server_name" '
-        '"$remote_user" "$upstream_addr" '
-        '"$upstream_http_server" "$upstream_http_location" '
-        '"$upstream_addr$uri" "$remote_addr" '
-        '"$http_user_agent" "$http_x_forwarded_for" ';
-
-    access_log /var/log/nginx/access.log test;
+    access_log /var/log/nginx/access.log;
 
     client_body_buffer_size 10K; #specific to nature of requests received
     client_max_body_size 8m; #prevents large request slowing down server
@@ -45,15 +30,15 @@ error_log /var/log/nginx/error.log;
     tcp_nopush on; #allows tcp to optimise
 
     {% set inc = namespace(port = 8000) %}
-    {% for item in name_web_list_ %}
-      {{ '{{' }}if ne {{ '(' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list_[loop.index0] }}{{'"'}} {{'"'}}0{{'"'}}{{ ')' }} {{'"'}}0{{'"'}} {{ '}}' }}
+    {% for item in name_web_list %}
+      {{ '{{' }}if ne {{ '(' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list[loop.index0] }}{{'"'}} {{'"'}}0{{'"'}}{{ ')' }} {{'"'}}0{{'"'}} {{ '}}' }}
       {% set inc.port = inc.port + 1 %}
       server {
           listen {{ inc.port }};
           server_name {{ nginx_server_ip }};
           location / {
             proxy_pass http://{{ name_alb }};
-            proxy_set_header Host {{ name_web_list_[loop.index0] }}.{{ zone_dns }};
+            proxy_set_header Host {{ name_web_list[loop.index0] }}.{{ zone_dns }};
           }
         }
       {{ '{{' }}end{{ '}}' }}
@@ -61,17 +46,17 @@ error_log /var/log/nginx/error.log;
 
     upstream main {
       {% set icr = namespace(port = 8000) %}
-      {% for item in name_web_list_ %}
-        {{ '{{' }}if ne {{ '(' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list_[loop.index0] }}{{'"'}} {{'"'}}0{{'"'}}{{ ')' }} {{'"'}}0{{'"'}} {{ '}}' }}
+      {% for item in name_web_list %}
+        {{ '{{' }}if ne {{ '(' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list[loop.index0] }}{{'"'}} {{'"'}}0{{'"'}}{{ ')' }} {{'"'}}0{{'"'}} {{ '}}' }}
               {% set icr.port = icr.port + 1 %}
-              server 127.0.0.1:{{ icr.port }} weight={{ '{{' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list_[loop.index0] }}{{'"'}} {{'"'}}1{{'"'}} {{ '}}' }};
+              server 127.0.0.1:{{ icr.port }} weight={{ '{{' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ weight_web_list[loop.index0] }}{{'"'}} {{'"'}}1{{'"'}} {{ '}}' }};
           {{ '{{' }}end{{ '}}' }}
       {% endfor %}
     }
 
-    {% for locw in location_web_list_ %}
-      upstream {{ locw }} {
-        server {{ name_web_list_[loop.index0] }}.{{ zone_dns }};
+    {% for namew in name_web_list %}
+      upstream {{ location_web_list[loop.index0] }} {
+        server {{ namew }}.{{ zone_dns }};
       }
     {% endfor %}
 
@@ -80,7 +65,7 @@ error_log /var/log/nginx/error.log;
       listen 80; #443 https
       server_name {{ nginx_server_ip }};
 
-      # root {{ site_location }};
+      root {{ site_location }};
 
       location = / {
       {{ '{{' }}if eq {{ '(' }}keyOrDefault {{'"'}}{{ kv_path_web }}/{{ start_web }}{{'"'}} {{'"'}}0{{'"'}}{{ ')' }} {{'"'}}0{{'"'}} {{ '}}' }}
@@ -94,10 +79,10 @@ error_log /var/log/nginx/error.log;
         # proxy_set_header X-Forwarded-Proto $scheme;
       {{ '{{' }}end{{ '}}' }}
       }
-      {% for locw in location_web_list_ %}
-      location = /{{ locw }} {
-        proxy_pass http://{{ locw }};
-        proxy_set_header Host {{ name_web_list_[loop.index0] }}.{{ zone_dns }};
+      {% for namew in name_web_list %}
+      location = /{{ location_web_list[loop.index0] }} {
+        proxy_pass http://{{ location_web_list[loop.index0] }};
+        proxy_set_header Host {{ namew }}.{{ zone_dns }};
       }
       {% endfor %}
 

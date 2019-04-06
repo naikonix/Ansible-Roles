@@ -24,8 +24,6 @@
   template:
     src: "/{{ destination }}/provisioners/roles/nginx/templates/nginx.conf.ctmpl.j2"
     dest: /etc/nginx/nginx.conf.ctmpl
-  tags:
-    - launch
 
 - name: Render nginx Systemd Config
   template:
