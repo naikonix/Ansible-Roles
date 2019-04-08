@@ -98,6 +98,8 @@ error_log /var/log/nginx/error.log;
       location = /{{ locw }} {
         proxy_pass http://{{ locw }};
         proxy_set_header Host {{ name_web_list_[loop.index0] }}.{{ zone_dns }};
+        auth_basic {{'"'}}{{ name_web_list_[loop.index0] }}{{'"'}};
+        auth_basic_user_file /etc/nginx/.htpasswd;
       }
       {% endfor %}
 

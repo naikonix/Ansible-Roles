@@ -11,12 +11,16 @@
     update_cache: yes
   when: not nginx_file_details.stat.exists
 
-- name: install nginx
+- name: install nginx and others
   become: true
   apt:
-    name: nginx
+    name: "{{ packages }}"
     state: present
     update_cache: yes
+  vars:
+    packages:
+      - apache2-utils
+      - nginx
   when: not nginx_file_details.stat.exists
 
 - name: copy nginx.conf template
