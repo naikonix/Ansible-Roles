@@ -1,0 +1,10 @@
+
+server.port: "{{ server_port | default('5601') }}"
+
+server.host: "{{ server_host | default('localhost') }}"
+
+elasticsearch.url: "{{ url }}"
+
+#logging.dest: /var/log/kibana.log
+
+#logging.verbose: true

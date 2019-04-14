@@ -1,0 +1,12 @@
+
+- name: restart metricbeat
+  systemd:
+    daemon_reload: yes
+    name: metricbeat
+    state: restarted
+    enabled: yes
+
+- name: Stop metricbeat
+  systemd:
+    name: metricbeat
+    state: stopped

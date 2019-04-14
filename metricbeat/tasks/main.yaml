@@ -1,0 +1,77 @@
+---
+
+- stat: path=/usr/bin/java
+  register: java_exists
+
+- name: Refresh java repo
+  become: yes
+  apt:
+    update_cache: yes
+  changed_when: false
+  when: not java_exists.stat.exists
+
+- name: Install Java
+  become: yes
+  apt:
+    name: "{{ java }}"
+    state: present
+  when: not java_exists.stat.exists
+
+- name: HTTPS APT transport for Elasticsearch repository.
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: present
+
+# Add Elasticsearch apt key
+- name: Add Elastic apt key
+  apt_key:
+   url: "{{ es_apt_key }}"
+   state: present
+
+# Add the Elasticsearch apt repo. For versions 6 of the stack - use '6.x-prerelease':
+- name: Adding Elastic repo
+  become: yes
+  apt_repository:
+   repo: "deb https://artifacts.elastic.co/packages/{{ elasticsearch_version }}/apt stable main"
+   state: present
+   update_cache: true
+
+- name: Install metricbeat
+  apt:
+   name: metricbeat
+   update_cache: yes
+
+- name: Update metricbeat config file
+  template:
+    src: "/{{ destination }}/provisioners/roles/metricbeat/templates/metricbeat.yaml.j2"
+    dest: /etc/metricbeat/metricbeat.yml
+
+- name: Enable nginx ans system modules
+  command: metricbeat modules enable nginx system
+
+# - name: Enable system module
+#   command: metricbeat modules enable system
+#   when: system_mod_enable
+
+- name: setup yml nginx module
+  template:
+    src: "/{{ destination }}/provisioners/roles/metricbeat/templates/nginx.yaml.j2"
+    dest: /etc/metricbeat/modules.d/nginx.yml
+  # when: nginx_mod_enable
+
+- name: setup yml system module
+  template:
+    src: "/{{ destination }}/provisioners/roles/metricbeat/templates/system.yaml.j2"
+    dest: /etc/metricbeat/modules.d/system.yml
+  # when: system_mod_enable
+
+- name: setup metricbeat
+  command: metricbeat setup
+  #when: nginx_mod_enable or system_mod_enable
+
+- name: Start metricbeat
+  service:
+   name: metricbeat
+   state: started
+   enabled: true

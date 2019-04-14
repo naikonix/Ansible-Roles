@@ -1,8 +1,9 @@
 ---
 
-- name: create user groups
+- name: create/ ensure  user groups
   group:
     name: "{{ item }}"
+    state: present
   loop: "{{ user_groups_create }}"
 
 - name: add user

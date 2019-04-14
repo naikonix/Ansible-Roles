@@ -1,0 +1,12 @@
+[Unit]
+Description=Filebeat sends log files to Logstash.
+Documentation=https://www.elastic.co/products/beats/filebeat
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart={{ file_beat_path }}/filebeat -c /etc/filebeat/filebeat.yml -e -v
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

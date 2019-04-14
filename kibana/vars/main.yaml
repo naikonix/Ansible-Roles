@@ -1,0 +1,17 @@
+---
+
+es_apt_key: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+
+kibana_version: 6.x
+
+destination: vagrant
+
+server_port: 5601
+
+server_host: 0.0.0.0
+
+url: "http://localhost:9200"
+
+kibana_mode: development
+
+kibana_path: /usr/share/kibana

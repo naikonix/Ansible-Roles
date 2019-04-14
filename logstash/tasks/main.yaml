@@ -1,0 +1,75 @@
+---
+
+- name: HTTPS APT transport for logstash repository.
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: present
+
+# Add Elasticsearch apt key
+- name: Add logstash apt key
+  apt_key:
+   url: "{{ es_apt_key }}"
+   state: present
+
+# Add the Elasticsearch apt repo. For versions 6 of the stack - use '6.x-prerelease':
+- name: Logstash - Adding Elastic repo
+  become: yes
+  apt_repository:
+   repo: "deb https://artifacts.elastic.co/packages/{{ logstash_version }}/apt stable main"
+   state: present
+   update_cache: true
+
+# Installing logstash
+- name: Install Logstash
+  apt:
+   name: logstash
+   update_cache: yes
+
+- name: Update logstash config file
+  template:
+    src: "/{{ destination }}/provisioners/roles/logstash/templates/logstash.yaml.j2"
+    dest: /etc/logstash/logstash.yml
+
+- name: Update logstash pipeline config file
+  template:
+    src: "/{{ destination }}/provisioners/roles/logstash/templates/logstash-nginx-mod.conf.j2"
+    dest: /etc/logstash/conf.d/logstash-nginx-mod.conf
+
+- name: Install dependencies
+  become: true
+  apt:
+    name: "{{ packages }}"
+    # state: latest
+  vars:
+    packages:
+      - unzip
+
+- name: download geoip
+  become: true
+  get_url:
+    url: "{{ geoip_url }}"
+    dest: /tmp
+    force: yes
+
+# - name: Unarchive geoip
+#   become: true
+#   unarchive:
+#     src: "/tmp/{{ geoip_package_name }}.gz"
+#     dest: /etc/logstash/
+#     remote_src: true
+
+- name: Unpack geoip
+  shell: "gunzip /tmp/{{ geoip_package_name }}.gz && mv /tmp/{{ geoip_package_name }} /etc/logstash/"
+
+- name: delete geoip file
+  become: true
+  file:
+    dest: "/tmp/{{ geoip_package_name }}.gz"
+    state: absent
+
+- name: Starting Logstash
+  service:
+   name: logstash
+   state: started
+   enabled: true

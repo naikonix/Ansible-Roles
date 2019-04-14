@@ -1,0 +1,23 @@
+
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: true
+  reload.period: 10s
+
+#setup.dashboards.enabled: true
+#setup.dashboards.index: "filebeat-*"
+
+setup.kibana:
+  host: "{{ kibana_site }}"
+
+output.elasticsearch:
+  hosts: ["{{ elasticsearch_site }}"]
+  #index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
+
+logging.level: debug
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644

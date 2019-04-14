@@ -1,0 +1,38 @@
+---
+
+- name: HTTPS APT transport for kibana repository.
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: present
+
+# Add Elasticsearch apt key
+- name: Add kibana apt key
+  apt_key:
+   url: "{{ es_apt_key }}"
+   state: present
+
+# Add the Elasticsearch apt repo. For versions 6 of the stack - use '6.x-prerelease':
+- name: Kibana - Adding Elastic repo
+  become: yes
+  apt_repository:
+   repo: "deb https://artifacts.elastic.co/packages/{{ kibana_version }}/apt stable main"
+   state: present
+   update_cache: true
+
+# Installing Kibana
+- name: Install Kibana
+  apt:
+   name: kibana
+   update_cache: yes
+
+- name: Update kibana config file
+  template:
+    src: "/{{ destination }}/provisioners/roles/kibana/templates/kibana.yaml.j2"
+    dest: /etc/kibana/kibana.yml
+
+- name: Starting Kibana
+  service:
+   name: kibana
+   state: started
+   enabled: true

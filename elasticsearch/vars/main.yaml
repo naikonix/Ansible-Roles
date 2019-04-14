@@ -1,0 +1,33 @@
+---
+
+es_apt_key: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+
+java: openjdk-8-jre-headless
+
+elasticsearch_version: 6.x
+
+destination: vagrant
+
+es_home: /usr/share/elasticsearch
+
+conf_dir: /etc/elasticsearch
+
+conf_file: /etc/elasticsearch/elasticsearch.yml
+
+data_dir: /var/lib/elasticsearch
+
+log_dir: /var/log/elasticsearch
+
+pid_dir: /var/run/elasticsearch
+
+env_file: /etc/default/elasticsearch
+
+es_home_dir: /usr/share/elasticsearch
+
+es_user: elasticsearch
+
+es_group: elasticsearch
+
+network_host: 0.0.0.0
+
+http_port: 9200

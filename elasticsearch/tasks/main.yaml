@@ -1,0 +1,66 @@
+---
+- stat: path=/usr/bin/java
+  register: java_exists
+
+- name: Refresh java repo
+  become: yes
+  apt:
+    update_cache: yes
+  changed_when: false
+  when: not java_exists.stat.exists
+
+- name: Install Java
+  become: yes
+  apt:
+    name: "{{ java }}"
+    state: present
+  when: not java_exists.stat.exists
+
+- name: HTTPS APT transport for Elasticsearch repository.
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: present
+
+# Add Elasticsearch apt key
+- name: Add Elasticsearch apt key
+  apt_key:
+   url: "{{ es_apt_key }}"
+   state: present
+
+# Add the Elasticsearch apt repo. For versions 6 of the stack - use '6.x-prerelease':
+- name: Adding Elasticsearch repo
+  become: yes
+  apt_repository:
+   repo: "deb https://artifacts.elastic.co/packages/{{ elasticsearch_version }}/apt stable main"
+   state: present
+   update_cache: true
+
+# Installing Elasticsearch
+- name: Install Elasticsearch
+  apt:
+   name: elasticsearch
+   update_cache: yes
+  environment:
+    ES_PATH_CONF: "/etc/elasticsearch"
+
+- name: Update elasticsearch config file
+  template:
+    src: "/{{ destination }}/provisioners/roles/elasticsearch/templates/elasticsearch.yaml.j2"
+    dest: /etc/elasticsearch/elasticsearch.yml
+
+# - name: Render elasticsearch Systemd Config
+#   template:
+#     src: "/{{ destination }}/provisioners/roles/elasticsearch/templates/elasticsearch.systemd.j2"
+#     dest: /etc/systemd/system/elasticsearch.service
+#     mode: 0644
+#   notify: restart elasticsearch
+
+- name: Starting Elasticsearch
+  service:
+   name: elasticsearch
+   state: started
+   enabled: true
+
+- name: flush handlers
+  meta: flush_handlers

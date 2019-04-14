@@ -1,0 +1,98 @@
+
+worker_processes auto;
+
+events {
+  worker_connections 1024;
+}
+
+error_log /var/log/nginx/error.log;
+
+  http {
+    include mime.types;
+
+    log_format test
+        '"$request"'
+        '"$http_referer" "$host" '
+        '"$http_host" "$server_name" '
+        '"$remote_user" "$upstream_addr" '
+        '"$upstream_http_server" "$upstream_http_location" '
+        '"$upstream_addr$uri" "$remote_addr" '
+        '"$http_user_agent" "$http_x_forwarded_for" ';
+
+    access_log /var/log/nginx/access.log test;
+
+    client_body_buffer_size 10K; #specific to nature of requests received
+    client_max_body_size 8m; #prevents large request slowing down server
+    # Buffer size for Headers
+    client_header_buffer_size 1k;
+    # Max time to receive client headers/body in ms
+    client_header_timeout 12;
+    # Max time to keep a connection open for in case more data is on the way, reduces the time to open another connection
+    # important not to keep connection open to long to avoid using up max connections
+    keepalive_timeout 30;
+    # Max time for the client accept/receive a response
+    send_timeout 10;
+    # for sites with large amount of static resources
+    # Skip buffering for static files (image sent from disk)
+    sendfile on; # slight increase in performance
+    # Optimise sendfile packets
+    tcp_nopush on; #allows tcp to optimise
+
+    upstream elasticsearch {
+      server 127.0.0.1:9200;
+      keepalive 15;
+    }
+
+    upstream kibana {
+      server 127.0.0.1:5601;
+      keepalive 15;
+    }
+
+    server{
+      listen 80; #443 https
+      server_name {{ nginx_server_ip }};
+
+      location = / {
+        return 200 "Hello from NGINX Proxy\n";
+      }
+    }
+
+
+    server{
+      listen 8880; #443 https
+      server_name {{ nginx_server_ip }};
+
+      location = / {
+        auth_basic "kibana access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        proxy_pass http://kibana;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Connection "Keep-Alive";
+        proxy_set_header Proxy-Connection "Keep-Alive";
+      }
+    }
+    server{
+
+      listen 8881; #443 https
+      server_name {{ nginx_server_ip }};
+
+      location = / {
+        auth_basic "elasticsearch access";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        proxy_pass http://elasticsearch;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Connection "Keep-Alive";
+        proxy_set_header Proxy-Connection "Keep-Alive";
+
+      }
+
+    }
+  }

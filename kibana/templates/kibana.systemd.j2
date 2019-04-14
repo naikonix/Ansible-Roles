@@ -1,0 +1,19 @@
+[Unit]
+Description=Kibana Service
+After=syslog.target network-online.target
+Wants=syslog.service network-online.target
+
+[Service]
+Type=simple
+Restart=always
+User=root
+Group=root
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=kibana
+
+Environment=NODE_ENV={{ kibana_mode }}
+ExecStart={{ kibana_path }}/bin/kibana
+
+[Install]
+WantedBy=multi-user.target

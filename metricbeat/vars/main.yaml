@@ -1,0 +1,29 @@
+---
+
+es_apt_key: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+
+java: openjdk-8-jre-headless
+
+elasticsearch_version: 6.x
+
+destination: vagrant
+
+elk_ip: 192.168.33.13
+
+logstash_port: 5400
+
+logstash_site: "{{ elk_ip }}:{{ logstash_port }}"
+
+kibana_port: 5601
+
+kibana_site: "{{ elk_ip }}:{{ kibana_port }}"
+
+elasticsearch_port: 9200
+
+elasticsearch_site: "{{ elk_ip }}:{{ elasticsearch_port }}"
+
+file_beat_path: /usr/share/filebeat/bin
+
+nginx_mod_enable: false
+
+system_mod_enable: false

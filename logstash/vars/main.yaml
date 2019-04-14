@@ -1,0 +1,21 @@
+---
+
+es_apt_key: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+
+logstash_version: 6.x
+
+destination: vagrant
+
+logstash_path: /usr/share/logstash
+
+path_data: /var/lib/logstash
+
+path_config: /etc/logstash/conf.d
+
+path_logs: /var/log/logstash
+
+geoip_url: "http://geolite.maxmind.com/download/geoip/database/{{ geoip_package_name }}.gz"
+
+geoip_package_name: GeoLite2-City.mmdb
+
+beats_port: 5400

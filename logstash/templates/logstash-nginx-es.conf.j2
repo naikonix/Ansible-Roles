@@ -1,0 +1,44 @@
+input {
+    beats {
+        port => "{{ beats_port }}"
+        # ssl => true
+        # ssl_certificate_authorities => ["/etc/elk-certs/elk-ssl.crt"]
+        # ssl_certificate => "/etc/elk-certs/elk-ssl.crt"
+        # ssl_key => "/etc/elk-certs/elk-ssl.key"
+        # ssl_verify_mode => "force_peer"
+      }
+    }
+
+filter {
+  grok {
+    match => [ "message" , "%{COMBINEDAPACHELOG}+%{GREEDYDATA:extra_fields}"]
+    overwrite => [ "message" ]
+  }
+  mutate {
+    convert => ["response", "integer"]
+    convert => ["bytes", "integer"]
+    convert => ["responsetime", "float"]
+  }
+  geoip {
+    source => "clientip"
+    target => "geoip"
+    add_tag => [ "nginx-geoip" ]
+  }
+  date {
+    match => [ "timestamp" , "dd/MMM/YYYY:HH:mm:ss Z" ]
+    remove_field => [ "timestamp" ]
+  }
+  useragent {
+    source => "agent"
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["localhost:9200"]
+    index => "weblogs-%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+  }
+  stdout {
+    codec => rubydebug
+  }
+}

@@ -1,0 +1,13 @@
+[Unit]
+Description=Logstash
+Documentation=https://www.elastic.co/products/logstash
+After=network.target
+ConditionPathExists=/etc/logstash/logstash.yml
+
+[Service]
+Type=simple
+Restart=always
+ExecStart={{ logstash_path }}/bin/logstash --path.settings /etc/logstash/
+
+[Install]
+WantedBy=multi-user.target
