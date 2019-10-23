@@ -1,0 +1,105 @@
+---
+
+# check if need to update visudo for sudo capabilities
+
+# Install wordpress requisites
+# create healthy file in apache_dir
+# copy htaccess file to apache_dir using template and passing
+
+
+# download and extract
+
+# change permissions on /var/www/html/wp-content
+# mode 755, chown apache:apache
+
+# template wp-config-sample.php.j2
+# variables
+# extract variables from Vault (run ansible role)
+# pass db_host from terraform or retrieve via ansible
+
+# start apache
+
+- name: update apt cache
+  become: true
+  apt:
+    update_cache: yes
+
+- name: Install Wordpress requisites
+  apt:
+    pkg:
+      - php
+      - php-mysql
+      - apache2
+    update_cache: yes
+    state: present
+
+- name: Create Wordpress home
+  command: "mkdir -p {{ apache_dir }}"
+
+- name: Download Wordpress
+  get_url:
+    url: "{{ wordpress_url }}"
+    dest: "/tmp/{{ wordpress_file }}"
+
+- name: Unarchive Wordpress
+  become: true
+  unarchive:
+    src: "/tmp/{{ wordpress_file }}"
+    dest: "{{ apache_dir }}"
+    #remote_src: true
+
+- name: Delete Wordpress file
+  become: true
+  file:
+    dest: "/tmp/{{ wordpress_file }}"
+    state: absent
+
+# check if ownership is apache
+- name: Ownership of Wordpress directory
+  file:
+    path: "{{ apache_dir }}/wp-content"
+    state: directory
+    recurse: yes
+    owner: apache
+    group: apache
+    mode: '0755'
+
+- name: Wordpress Server config directory
+  shell: "sudo sed -i -e 's/^DocumentRoot.*$/DocumentRoot "\/var\/www\/wordpress"/' /etc/apache2/sites-enabled/000-default.conf"
+  # "sudo sed -i -e '/^DocumentRoot/s/$/ \\/var\\/www\\/wordpress/' /etc/apache2/sites-enabled/000-default.conf"
+  #remember to rename the rest of the tasks with new wordpress directory
+
+#"sudo sed -i -e '/^ExecStart=/s/$/ -H tcp:\\/\\/0.0.0.0:4243/' /lib/systemd/system/docker.service"
+
+
+# check how to store db_credvars
+# remember to retrieve token, specify url, upload secret to path secret/wp/db
+# role to create vault server
+- name: Capture Vault Dict
+  set_fact:
+    db_cred: "{{ lookup('hashi_vault', 'secret=secret/wp/db token={{ vault_token }} url={{ vault_url }}') }}"
+
+# pass db_host from terraform
+- name: Render htaccess file
+  become: true
+  template:
+    src: "/{{ destination }}/provisioners/roles/wordpress/templates/htaccess.j2"
+    dest: "{{ apache_dir }}/.htaccess"
+
+# need to make sure dict db_cred is referenced in template
+- name: Render wp-config file
+  become: true
+  template:
+    src: "/{{ destination }}/provisioners/roles/wordpress/templates/wp-config.php.j2"
+    dest: "{{ apache_dir }}/wp-config.php"
+  with_dict:
+    - "{{ db_cred }}"
+
+- name: Create Healthy File
+  command: "echo 'healthy' > {{ apache_dir }}/healthy.html"
+
+- name: Enable apache
+  service:
+   name: apache
+   state: started
+   enabled: true

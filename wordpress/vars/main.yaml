@@ -1,0 +1,16 @@
+---
+
+cloudfront_url: cloudfront.net
+apache_dir: /var/www/wordpress
+wordpress_url: "https://wordpress.org/{{ wordpress_file }}"
+wordpress_file: latest.tar.gz
+
+db_name: wordpress
+db_username: wordpress
+db_password: wordpress
+db_host: localhost
+
+destination: wordpress_h
+
+vault_token: token
+vault_url: url
