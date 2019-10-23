@@ -29,6 +29,17 @@
     src: "/{{ destination }}/provisioners/roles/nginx/templates/nginx.conf.ctmpl.j2"
     dest: /etc/nginx/nginx.conf.ctmpl
 
+- name: Create auth_basic entries
+  htpasswd:
+    path: '/etc/nginx/.htpasswd'
+    name: '{{ item.user }}'
+    password: '{{ item.password }}'
+    crypt_scheme: 'sha512_crypt'
+    group: 'root'
+    owner: 'root'
+    mode: '0644'
+  with_items: '{{ auth_basic_user }}'
+
 - name: Render nginx Systemd Config
   template:
     src: "/{{ destination }}/provisioners/roles/nginx/templates/nginx.systemd.j2"
