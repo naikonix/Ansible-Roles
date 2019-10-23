@@ -1,0 +1,38 @@
+---
+
+- name: HTTPS APT transport .
+  become: yes
+  apt:
+    name: apt-transport-https
+    state: present
+
+- name: Add GPG key
+  apt_key:
+   url: "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
+   state: present
+
+- name: Add kubernetes repo
+  become: yes
+  apt_repository:
+   repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+   state: present
+   update_cache: true
+
+- name: Install kubectl kubelet kubeadm
+  become: yes
+  apt:
+    pkg:
+      - kubectl
+      - kubelet
+      - kubeadm
+    state: present
+
+- name: Install Kompose
+  apt:
+    deb: "{{ kompose_url }}"
+
+- name: Download minikube
+  get_url:
+    url: "https://storage.googleapis.com/minikube/releases/{{ minikube_version }}/minikube-linux-amd64"
+    dest: "{{ minikube_path }}"
+    mode: 0755

@@ -1,0 +1,7 @@
+---
+
+- name: restart kubectl
+  service:
+    name: kubectl
+    state: restarted
+    enabled: yes
