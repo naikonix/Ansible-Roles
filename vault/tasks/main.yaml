@@ -1,0 +1,98 @@
+---
+
+- name: Install dependencies
+  become: true
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - unzip
+
+- name: Download Vault
+  get_url:
+    url: "{{ vault_url }}"
+    dest: "/tmp/{{ vault_file }}"
+
+- name: Unarchive Vault
+  become: true
+  unarchive:
+    src: "/tmp/{{ vault_file }}"
+    dest: "{{ vault_dir }}"
+
+- name: Delete Vault file
+  become: true
+  file:
+    dest: "/tmp/{{ vault_file }}"
+    state: absent
+
+- name: set flag
+  command: "setcap cap_ipc_lock=+ep {{ vault_dir }}/vault"
+
+- name: Create Vault User
+  user:
+    name: vault
+    groups: vault
+    state: present
+    shell: /sbin/nologin
+    system: yes
+    createhome: true
+    home: "{{ vault_data }}"
+
+- name: Ownership of Vault directory
+  file:
+    path: "{{ vault_data }}"
+    state: directory
+    recurse: yes
+    owner: vault
+    group: vault
+    mode: '0750'
+
+- name: Copy vault hcl file
+  become: true
+  template:
+    src: "/{{ destination }}/provisioners/roles/vault/templates/vault.hcl.j2"
+    dest: "/etc/vault.hcl"
+    owner: vault
+    group: vault
+    mode: '0640'
+
+- name: Render vault Systemd Config
+  template:
+    src: "/{{ destination }}/provisioners/roles/vault/templates/nginx.systemd.j2"
+    dest: /etc/systemd/system/vault.service
+    mode: 0644
+  notify: restart vault
+
+- pause:
+    seconds: 20
+
+- name: Initialize the vault
+  command: vault operator init -key-shares=3 -key-threshold=2 -format json
+  register: vault_init_output
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+
+- debug:
+  msg: "{{ vault_init_output }}"
+
+- name: Parse output of vault init
+  set_fact:
+    vault_init_parsed: "{{ vault_init_output.stdout | from_json }}"
+
+- name: Write unseal keys to files
+  copy:
+    content:
+    dest:
+  delegate_to: localhost
+
+- name: Write root token to file
+  copy:
+    content:
+    dest:
+  delegate_to: localhost
+
+#######https://medium.com/@mitesh_shamra/setup-hashicorp-vault-using-ansible-fa8073a70a56
+#######https://www.digitalocean.com/community/tutorials/how-to-securely-manage-secrets-with-hashicorp-vault-on-ubuntu-16-04
+######https://www.ru-rocker.com/2019/08/02/how-to-secure-credentials-in-ansible-playbook-using-hashicorp-vault/
+#######https://www.serverlab.ca/tutorials/dev-ops/automation/using-hashicorp-vault-with-ansible-jinja2-templates/
+######https://docs.ansible.com/ansible/latest/plugins/lookup/hashi_vault.html
