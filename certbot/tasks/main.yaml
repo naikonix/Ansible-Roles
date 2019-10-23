@@ -1,0 +1,46 @@
+---
+
+- name: check if certbot already installed
+  stat:
+    path:
+  register: certbot_file_details
+
+- name: update apt cache
+  become: true
+  apt:
+    update_cache: yes
+  when: not certbot_file_details.stat.exists
+
+- name: add universe PPA
+  apt_repository:
+    repo: 'universe'
+  when: not certbot_file_details.stat.exists
+
+- name: add certbot PPA
+  apt_repository:
+    repo: 'ppa:certbot/certbot'
+  when: not certbot_file_details.stat.exists
+
+- name: install certbot and others
+  become: true
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - software-properties-common
+      - certbot
+      - python-certbot-nginx
+  when: not certbot_file_details.stat.exists
+
+- name: run certbot
+  shell: sudo certbot --nginx
+
+- name: setup cron job for auto renewal of certificate
+  cron:
+    name: "renew certbot certificate for nginx"
+    minute: "0"
+    hour: "5"
+    job: "sudo certbot renew --dry-run"
+  when: not certbot_file_details.stat.exists
