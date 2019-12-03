@@ -1,6 +1,17 @@
 ---
 - name: Converge
-  hosts: vagrant
-  gather_facts: false
+  hosts: all
+  become: true
+
   roles:
-    - role: consul
+    - { role: consul, destination: '/home/mm/Projects/Molecule/'}
+
+  post_tasks:
+    - name: Ensure Consul is running
+      uri:
+        url: http://127.0.0.1:8500
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 60
+      delay: 1

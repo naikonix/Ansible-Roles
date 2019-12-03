@@ -2,13 +2,13 @@
 Description="Consul Agent"
 Requires=network-online.target
 After=network-online.target
-ConditionFileNotEmpty=/tmp/consul.d/config.json
+ConditionFileNotEmpty={{ consul_config }}/config.json
 
 [Service]
-User=root
-Group=root
-ExecStart=/usr/local/bin/consul agent -config-dir=/tmp/consul.d/
-ExecReload=/usr/local/bin/consul reload
+User=consul
+Group=consul
+ExecStart={{ consul_bin_dir }}/consul agent -config-dir={{ consul_config }}
+ExecReload={{ consul_bin_dir }}/consul reload
 KillMode=process
 Restart=on-failure
 LimitNOFILE=65536

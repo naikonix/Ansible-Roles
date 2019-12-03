@@ -1,0 +1,23 @@
+---
+
+www_dir: /var/www/wordpress
+
+dest_dir: /tmp
+
+backup_file: backup.tgz
+
+www_prefix: wwwbackup
+
+s3_bucket_media: media
+
+s3_bucket_backup: backup
+
+mysql_dir: /var/lib/mysql/wordpress
+
+percona_target_dir: /temp
+
+db_prefix: perconabackup
+
+vault_token: "{{ lookup('env','VAULT_TOKEN') }}"
+
+vault_server: "{{ lookup('env','VAULT_ADDR') }}"

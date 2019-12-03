@@ -1,0 +1,42 @@
+
+ansible role
+
+- add this ansible role to the ansible pull file
+- need to create backup bucket
+- setup role to load the data (create role in terraform )
+- wordpress role has mysql db.
+  1 - Setup variable when rds is used
+  2 - Setup variable when backup migration is to occur
+  3 - Setup variable when new mysql is required
+
+
+**what about copying apache config details
+
+1) copies data from www/var/wordpress (change directory for /Users/M/Shared to get folder from ) to EC2 instance (this has to be in user_data, with ansible task with a tag to signify a backup import is required or not)
+
+2) runs Percona Xtrabackup to create backup
+db is not located in www/var/wordpress
+
+3) moves backup to S3
+
+
+
+
+
+
+
+COPY ALL HIDDEN FILES
+- name: copy basic files to folder
+  copy:
+    src: "{{ item }}"
+    dest: ~/data/
+    mode: 755
+    owner: "www-data"
+    group: "www-data"
+  with_fileglob:
+    - ../files/data/*
+    - ../files/data/.*
+
+
+
+Seperate note: If your .htaccess file is missing, then the first thing you need to do is to visit Settings » Permalinks page and click on ‘Save Changes’ button without changing anything.

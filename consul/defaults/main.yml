@@ -1,0 +1,17 @@
+---
+
+agent: server
+consul_ip: 192.168.43.10
+node_name: consul
+destination: dest
+consul_vers: 1.4.0
+consul_package_name: "consul_{{ consul_vers }}_linux_amd64.zip"
+consul_url: "https://releases.hashicorp.com/consul/{{ consul_vers }}/{{ consul_package_name }}"
+
+consul_user: consul
+consul_group: consul
+
+consul_dir: "/opt/consul"
+consul_bin_dir: "{{ consul_dir }}/bin"
+
+consul_config: "/etc/consul.d"

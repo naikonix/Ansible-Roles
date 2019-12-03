@@ -1,0 +1,3 @@
+Options +FollowSymlinks
+RewriteEngine on
+rewriterule ^wp-content/uploads/(.*)$ {{ url_cloudfront }}$1 [r=301,nc]

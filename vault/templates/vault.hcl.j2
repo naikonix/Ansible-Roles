@@ -1,0 +1,9 @@
+storage "consul" {
+  address = "{{ consul_addr }}"
+  path = "{{ vault_kv }}"
+}
+
+listener "tcp" {
+  address = "{{ vault_addr }}"
+  tls_disable = "true"
+}

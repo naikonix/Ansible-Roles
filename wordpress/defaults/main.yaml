@@ -1,6 +1,6 @@
 ---
 
-cloudfront_url: cloudfront.net
+url_cloudfront: cloudfront.net
 apache_dir: /var/www/wordpress
 wordpress_url: "https://wordpress.org/{{ wordpress_file }}"
 wordpress_file: latest.tar.gz
@@ -8,9 +8,18 @@ wordpress_file: latest.tar.gz
 db_name: wordpress
 db_username: wordpress
 db_password: wordpress
-db_host: localhost
+
+db_local: true
 
 destination: wordpress_h
 
 vault_token: token
 vault_url: url
+
+import_www: false
+
+s3_bucket_backup: bb
+www_prefix: p
+backup_file: bf
+dest_dir: /tmp
+import_www: iwww

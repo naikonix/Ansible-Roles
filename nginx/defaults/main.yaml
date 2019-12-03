@@ -1,5 +1,5 @@
 ---
-nginx_server_ip: 192.168.33.10
+nginx_server: 192.168.33.10
 destination: nginx_h
 site_location: /sites/go/
 name_web_list: w

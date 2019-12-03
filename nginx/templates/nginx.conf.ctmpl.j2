@@ -50,7 +50,7 @@ error_log /var/log/nginx/error.log;
       {% set inc.port = inc.port + 1 %}
       server {
           listen {{ inc.port }};
-          server_name {{ nginx_server_ip }};
+          server_name {{ nginx_server }};
           location / {
             proxy_pass http://{{ name_alb }};
             proxy_set_header Host {{ name_web_list_[loop.index0] }}.{{ zone_dns }};
@@ -78,7 +78,7 @@ error_log /var/log/nginx/error.log;
     server{
 
       listen 80; #443 https
-      server_name {{ nginx_server_ip }};
+      server_name {{ nginx_server }};
 
       # root {{ site_location }};
 

@@ -45,6 +45,12 @@
     state: absent
   when: not consul_template_file_details.stat.exists
 
+- name: Move HCL file
+  template:
+    src: "/{{ destination }}/provisioners/roles/consultemplate/templates/nginx.consul-template.hcl.j2"
+    dest: /etc/nginx.consul-template.hcl
+    mode: 0644
+
 - name: Render consultemplate Systemd Config
   template:
     src: "/{{ destination }}/provisioners/roles/consultemplate/templates/consultemplate.systemd.j2"

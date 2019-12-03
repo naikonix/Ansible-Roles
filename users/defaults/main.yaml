@@ -1,1 +1,10 @@
 ---
+user_name:
+pass:
+user_groups_create:
+groups_add_user:
+expires: -1
+user_shell: /bin/bash
+home_create: no
+system_user: no
+account_state: yes

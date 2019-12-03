@@ -4,7 +4,7 @@
   set_fact:
     weight_list: "{{ weight_web_list | regex_replace('\"','') | regex_replace(']') | regex_replace('\\[') }}"
 
-- name: split set_fact variable remove [] "" from name_web_list
+- name: recreate list
   set_fact:
     weight_web_list_: "{{ weight_list.split(',') }}"
 

@@ -1,12 +1,12 @@
 {
 
   "datacenter": "Dev",
-  "data_dir": "/tmp/consul",
+  "data_dir": "{{ consul_dir }}",
   "log_level": "INFO",
   "enable_script_checks": true,
-  "client_addr": "0.0.0.0",
+  "client_addr": "127.0.0.1",
   "node_name": "{{ node_name }}",
-  "bind_addr": "{{ consul_ip }}",
+  "advertise_addr": "{{ consul_ip }}",
 {% if (agent == 'server') %}
   "server": true,
   "bootstrap_expect": 1

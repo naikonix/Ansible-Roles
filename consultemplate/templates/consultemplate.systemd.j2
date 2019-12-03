@@ -2,12 +2,12 @@
 Description="Consul Template"
 Requires=network-online.target
 After=network-online.target
-ConditionFileNotEmpty=/{{ destination }}/provisioners/roles/consultemplate/templates/nginx.consul-template.hcl
+ConditionFileNotEmpty=/etc/nginx.consul-template.hcl
 
 [Service]
 User=root
 Group=root
-ExecStart=/usr/local/bin/consul-template -config /{{ destination }}/provisioners/roles/consultemplate/templates/nginx.consul-template.hcl
+ExecStart=/usr/local/bin/consul-template -config /etc/nginx.consul-template.hcl
 ExecReload=/usr/local/bin/consul-template reload
 KillMode=process
 Restart=on-failure
