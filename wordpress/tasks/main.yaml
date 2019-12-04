@@ -1,24 +1,5 @@
 ---
 
-# check if need to update visudo for sudo capabilities
-
-# Install wordpress requisites
-# create healthy file in apache_dir
-# copy htaccess file to apache_dir using template and passing
-
-
-# download and extract
-
-# change permissions on /var/www/html/wp-content
-# mode 755, chown apache:apache
-
-# template wp-config-sample.php.j2
-# variables
-# extract variables from Vault (run ansible role)
-# pass db_host from terraform or retrieve via ansible
-
-# start apache
-
 - name: update apt cache
   become: true
   apt:
