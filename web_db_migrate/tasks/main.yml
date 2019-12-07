@@ -1,6 +1,5 @@
 ---
 
-
 # Move apache files to S3 Bucket
 - name: Compress directory
   archive:
@@ -11,7 +10,7 @@
 
 - name: get Vault aws secret credentials
   set_fact:
-    aws_cred: "{{ lookup('hashi_vault', 'secret=kv/aws token={{ vault_token }} url=https://{{ vault_server }}:8200 validate_certs=false') }}"
+    aws_cred: "{{ lookup('hashi_vault', 'secret=secret/aws token={{ vault_token }} url={{ vault_server }} validate_certs=false') }}"
 
 - name: put web server files in s3 bucket
   aws_s3:
