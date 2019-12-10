@@ -99,6 +99,6 @@
 
 - name: Enable apache
   service:
-   name: apache
+   name: apache2
    state: started
    enabled: true
