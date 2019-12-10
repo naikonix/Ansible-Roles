@@ -35,7 +35,6 @@
   file:
     path: "{{ apache_dir }}"
     state: directory
-    state: present
 
 - name: Download Wordpress
   get_url:
@@ -69,7 +68,7 @@
   shell: "sudo sed -i -e 's/^DocumentRoot.*$/DocumentRoot \"\\/var\\/www\\/wordpress\"/' /etc/apache2/sites-enabled/000-default.conf"
 
 - name: Enable override for S3 bucket images
-  shell: "sed -i -e "/^<Directory \\/var\\/www\\/>.*/{n;n;s/None.*$/All/;}" /etc/apache2/apache2.conf"
+  shell: 'sed -i -e "/^<Directory \\/var\\/www\\/>.*/{n;n;s/None.*$/All/;}" /etc/apache2/apache2.conf'
 
 - name: Render wp-config file
   become: true

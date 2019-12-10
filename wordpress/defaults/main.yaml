@@ -8,6 +8,7 @@ wordpress_file: latest.tar.gz
 db_name: wordpress
 db_username: wordpress
 db_password: wordpress
+db_host: localhost
 
 db_local: true
 
