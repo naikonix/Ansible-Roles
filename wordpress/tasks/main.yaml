@@ -16,11 +16,13 @@
       - php-xmlrpc
       - php-mbstring
       - php-memcached
+      - php-soap
       - php-curl
       - php-zip
       - php-gd
       - php-bcmath
       - php-imagick
+      - php-intl
     update_cache: yes
     state: present
 
@@ -46,7 +48,6 @@
   unarchive:
     src: "/tmp/{{ wordpress_file }}"
     dest: "{{ apache_dir }}"
-    #remote_src: true
 
 - name: Delete Wordpress file
   become: true
@@ -54,20 +55,25 @@
     dest: "/tmp/{{ wordpress_file }}"
     state: absent
 
-# check if ownership is apache
-- name: Ownership/Permissions of Wordpress content directory
-  file:
-    path: "{{ apache_dir }}/wp-content"
-    state: directory
-    recurse: yes
-    owner: www-data
-    group: www-data
-    mode: '0755'
+- name: Wordpress Server config directory - apache2.conf
+  shell: 'sudo sed -i -e "s/^<Directory \\/var\\/www.*$/<Directory \\/var\\/www\\/wordpress\\/>/" /home/mm/Documents/check/apache2.conf'
 
-- name: Wordpress Server config directory
-  shell: "sudo sed -i -e 's/^DocumentRoot.*$/DocumentRoot \"\\/var\\/www\\/wordpress\"/' /etc/apache2/sites-enabled/000-default.conf"
+- name: Wordpress Server config directory - 000-default.conf
+  shell: "sudo sed -i -e 's/DocumentRoot.*$/DocumentRoot \\/var\\/www\\/wordpress/' {{ item }}"
+  with_items:
+    - /etc/apache2/sites-enabled/000-default.conf
+    - /etc/apache2/sites-available/000-default.conf
 
-- name: Enable override for S3 bucket images
+- name: Setup Wordpress Server port 8888 - ports.conf
+  shell: "sudo sed -i -e 's/^Listen.*$/Listen 8888/' /etc/apache2/ports.conf"
+
+- name: Setup Wordpress Server port 8888 - /sites-available/000-default.conf
+  shell: "sudo sed -i -e 's/^<VirtualHost.*$/<VirtualHost *:8888>/' {{ item }}"
+  with_items:
+    - /etc/apache2/sites-available/000-default.conf
+    - /etc/apache2/sites-enabled/000-default.conf
+
+- name: Enable override for S3 bucket images - apache2.conf
   shell: 'sed -i -e "/^<Directory \\/var\\/www\\/>.*/{n;n;s/None.*$/All/;}" /etc/apache2/apache2.conf'
 
 - name: Render wp-config file
@@ -75,6 +81,13 @@
   template:
     src: "/{{ destination }}/provisioners/roles/wordpress/templates/wp-config.php.j2"
     dest: "{{ apache_dir }}/wp-config.php"
+
+- name: Delete current wordpress files
+  file:
+    path: "{{ apache_dir }}"
+    state: absent
+    recurse: yes
+  when: import_www == 'true'
 
 - name: get wordpress file from S3 bucket
   aws_s3:
@@ -91,11 +104,29 @@
     dest: "{{ apache_dir }}"
   when: import_www == 'true'
 
-- name: Render htaccess file
+- name: Ensure directories are 0755
+  command: find {{ apache_dir }} -type d -exec chmod -c 0755 {} \;
+
+- name: Ensure files are 0644
+  command: find {{ apache_dir }} -type f -exec chmod -c 0644 {} \;
+
+# check if ownership is apache
+- name: Ownership of Wordpress content files
+  file:
+    path: "{{ apache_dir }}"
+    state: directory
+    recurse: yes
+    owner: www-data
+    group: www-data
+
+- name: Render htaccess file for rewrites
   become: true
   template:
     src: "/{{ destination }}/provisioners/roles/wordpress/templates/.htaccess.j2"
     dest: "{{ apache_dir }}/.htaccess"
+
+- name: Enable the Rewrite Module
+  shell: "sudo a2enmod rewrite"
 
 - name: Enable apache
   service:
