@@ -56,7 +56,7 @@
     state: absent
 
 - name: Wordpress Server config directory - apache2.conf
-  shell: 'sudo sed -i -e "s/^<Directory \\/var\\/www.*$/<Directory \\/var\\/www\\/wordpress\\/>/" /home/mm/Documents/check/apache2.conf'
+  shell: 'sudo sed -i -e "s/^<Directory \\/var\\/www.*$/<Directory \\/var\\/www\\/wordpress\\/>/" /etc/apache2/apache2.conf'
 
 - name: Wordpress Server config directory - 000-default.conf
   shell: "sudo sed -i -e 's/DocumentRoot.*$/DocumentRoot \\/var\\/www\\/wordpress/' {{ item }}"
@@ -74,19 +74,25 @@
     - /etc/apache2/sites-enabled/000-default.conf
 
 - name: Enable override for S3 bucket images - apache2.conf
-  shell: 'sed -i -e "/^<Directory \\/var\\/www\\/>.*/{n;n;s/None.*$/All/;}" /etc/apache2/apache2.conf'
+  shell: 'sed -i -e "/^<Directory \\/var\\/www\\/wordpress\\/>.*/{n;n;s/None.*$/All/;}" /etc/apache2/apache2.conf'
 
 - name: Render wp-config file
   become: true
   template:
     src: "/{{ destination }}/provisioners/roles/wordpress/templates/wp-config.php.j2"
-    dest: "{{ apache_dir }}/wp-config.php"
+    dest: "{{ www_dir }}/wp-config.php"
 
 - name: Delete current wordpress files
   file:
     path: "{{ apache_dir }}"
     state: absent
     recurse: yes
+  when: import_www == 'true'
+
+- name: Recreate Wordpress Directory
+  file:
+    path: "{{ apache_dir }}"
+    state: directory
   when: import_www == 'true'
 
 - name: get wordpress file from S3 bucket

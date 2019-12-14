@@ -2,6 +2,7 @@
 
 url_cloudfront: cloudfront.net
 apache_dir: /var/www/wordpress
+www_dir: /var/www
 wordpress_url: "https://wordpress.org/{{ wordpress_file }}"
 wordpress_file: latest.tar.gz
 
