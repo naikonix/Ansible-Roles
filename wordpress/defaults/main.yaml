@@ -13,7 +13,7 @@ db_host: localhost
 
 db_local: true
 
-destination: wordpress_h
+destination: terraform
 
 vault_token: token
 vault_url: url
