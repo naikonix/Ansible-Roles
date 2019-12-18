@@ -33,27 +33,25 @@
     update_cache: yes
     state: present
 
-- name: Create Wordpress home
-  file:
-    path: "{{ apache_dir }}"
-    state: directory
-
 - name: Download Wordpress
   get_url:
     url: "{{ wordpress_url }}"
     dest: "/tmp/{{ wordpress_file }}"
+  when: import_www == 'false'
 
 - name: Unarchive Wordpress
   become: true
   unarchive:
     src: "/tmp/{{ wordpress_file }}"
-    dest: "{{ apache_dir }}"
+    dest: "{{ www_dir }}"
+  when: import_www == 'false'
 
 - name: Delete Wordpress file
   become: true
   file:
     dest: "/tmp/{{ wordpress_file }}"
     state: absent
+  when: import_www == 'false'
 
 - name: Wordpress Server config directory - apache2.conf
   shell: 'sudo sed -i -e "s/^<Directory \\/var\\/www.*$/<Directory \\/var\\/www\\/wordpress\\/>/" /etc/apache2/apache2.conf'
@@ -82,19 +80,6 @@
     src: "/{{ destination }}/provisioners/roles/wordpress/templates/wp-config.php.j2"
     dest: "{{ www_dir }}/wp-config.php"
 
-- name: Delete current wordpress files
-  file:
-    path: "{{ apache_dir }}"
-    state: absent
-    recurse: yes
-  when: import_www == 'true'
-
-- name: Recreate Wordpress Directory
-  file:
-    path: "{{ apache_dir }}"
-    state: directory
-  when: import_www == 'true'
-
 - name: get wordpress file from S3 bucket
   aws_s3:
     bucket: "{{ s3_bucket_backup }}"
@@ -107,7 +92,7 @@
 - name: unarchive wordpress files to /var/www/wordpress
   unarchive:
     src: "/{{ dest_dir }}/{{ backup_file }}"
-    dest: "{{ apache_dir }}"
+    dest: "{{ www_dir }}"
   when: import_www == 'true'
 
 - name: Ensure directories are 0755

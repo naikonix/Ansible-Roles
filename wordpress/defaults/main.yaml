@@ -18,10 +18,9 @@ destination: terraform
 vault_token: token
 vault_url: url
 
-import_www: false
+import_www: true
 
 s3_bucket_backup: bb
 www_prefix: p
 backup_file: bf
 dest_dir: /tmp
-import_www: iwww
