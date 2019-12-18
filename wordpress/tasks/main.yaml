@@ -111,15 +111,15 @@
   when: import_www == 'true'
 
 - name: Ensure directories are 0755
-  command: find {{ apache_dir }} -type d -exec chmod -c 0755 {} \;
+  command: find {{ www_dir }} -type d -exec chmod -c 0755 {} \;
 
 - name: Ensure files are 0644
-  command: find {{ apache_dir }} -type f -exec chmod -c 0644 {} \;
+  command: find {{ www_dir }} -type f -exec chmod -c 0644 {} \;
 
 # check if ownership is apache
 - name: Ownership of Wordpress content files
   file:
-    path: "{{ apache_dir }}"
+    path: "{{ www_dir }}"
     state: directory
     recurse: yes
     owner: www-data
