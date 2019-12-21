@@ -72,12 +72,12 @@
     - /etc/apache2/sites-enabled/000-default.conf
     - /etc/apache2/sites-available/000-default.conf
 
-- name: Setup Wordpress Server port 8888 - ports.conf
-  shell: "sudo sed -i -e 's/^Listen.*$/Listen 8888/' /etc/apache2/ports.conf"
+- name: Setup Wordpress Server port - ports.conf
+  shell: "sudo sed -i -e 's/^Listen.*$/Listen {{ apache_port }}/' /etc/apache2/ports.conf"
   when: change_port | bool
 
-- name: Setup Wordpress Server port 8888 - /sites-available/000-default.conf
-  shell: "sudo sed -i -e 's/^<VirtualHost.*$/<VirtualHost *:8888>/' {{ item }}"
+- name: Setup Wordpress Server port - /sites-available/000-default.conf
+  shell: "sudo sed -i -e 's/^<VirtualHost.*$/<VirtualHost *:{{ apache_port }}>/' {{ item }}"
   with_items:
     - /etc/apache2/sites-available/000-default.conf
     - /etc/apache2/sites-enabled/000-default.conf
