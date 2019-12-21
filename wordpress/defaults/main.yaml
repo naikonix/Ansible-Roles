@@ -24,3 +24,7 @@ s3_bucket_backup: bb
 www_prefix: p
 backup_file: bf
 dest_dir: /tmp
+
+port: 8888
+
+change_port: false

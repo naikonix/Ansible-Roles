@@ -1,28 +1,33 @@
 ---
 
-- name: update apt cache
-  become: true
-  apt:
-    update_cache: yes
+- name: Set the correct opcache filename (Ubuntu/Debian).
+  set_fact:
+    php_opcache_conf_filename: "10-opcache.ini"
 
-- name: Install Wordpress PHP requisites
+- name: Add repository for PHP .
+  apt_repository:
+    repo: 'ppa:ondrej/php'
+
+- name: Install Wordpress requisites
   apt:
     pkg:
-      - php
-      - php-mysql
-      - php-common
-      - php-tidy
-      - php-xml
-      - php-xmlrpc
-      - php-mbstring
-      - php-memcached
-      - php-soap
-      - php-curl
-      - php-zip
-      - php-gd
-      - php-bcmath
-      - php-imagick
-      - php-intl
+      - php7.3
+      - php7.3-mysql
+      - php7.3-common
+      - php7.3-tidy
+      - php7.3-xml
+      - php7.3-xmlrpc
+      - php7.3-mbstring
+      - php7.3-memcached
+      - php7.3-soap
+      - php7.3-curl
+      - php7.3-zip
+      - php7.3-gd
+      - php7.3-bcmath
+      - php7.3-imagick
+      - php7.3-intl
+      - mysql-server
+      - python3-pymysql
     update_cache: yes
     state: present
 
@@ -33,25 +38,30 @@
     update_cache: yes
     state: present
 
+- name: Create Wordpress home
+  file:
+    path: "{{ apache_dir }}"
+    state: directory
+
 - name: Download Wordpress
   get_url:
     url: "{{ wordpress_url }}"
     dest: "/tmp/{{ wordpress_file }}"
-  when: import_www == 'false'
+  when: not import_www
 
 - name: Unarchive Wordpress
   become: true
   unarchive:
     src: "/tmp/{{ wordpress_file }}"
     dest: "{{ www_dir }}"
-  when: import_www == 'false'
+  when: not import_www
 
 - name: Delete Wordpress file
   become: true
   file:
     dest: "/tmp/{{ wordpress_file }}"
     state: absent
-  when: import_www == 'false'
+  when: not import_www
 
 - name: Wordpress Server config directory - apache2.conf
   shell: 'sudo sed -i -e "s/^<Directory \\/var\\/www.*$/<Directory \\/var\\/www\\/wordpress\\/>/" /etc/apache2/apache2.conf'
@@ -64,12 +74,14 @@
 
 - name: Setup Wordpress Server port 8888 - ports.conf
   shell: "sudo sed -i -e 's/^Listen.*$/Listen 8888/' /etc/apache2/ports.conf"
+  when: change_port | bool
 
 - name: Setup Wordpress Server port 8888 - /sites-available/000-default.conf
   shell: "sudo sed -i -e 's/^<VirtualHost.*$/<VirtualHost *:8888>/' {{ item }}"
   with_items:
     - /etc/apache2/sites-available/000-default.conf
     - /etc/apache2/sites-enabled/000-default.conf
+  when: change_port | bool
 
 - name: Enable override for S3 bucket images - apache2.conf
   shell: 'sed -i -e "/^<Directory \\/var\\/www\\/wordpress\\/>.*/{n;n;s/None.*$/All/;}" /etc/apache2/apache2.conf'
@@ -87,13 +99,13 @@
     dest: "/{{ dest_dir }}/{{ backup_file }}"
     mode: get
   become: true
-  when: import_www == 'true'
+  when: import_www | bool
 
 - name: unarchive wordpress files to /var/www/wordpress
   unarchive:
     src: "/{{ dest_dir }}/{{ backup_file }}"
-    dest: "{{ www_dir }}"
-  when: import_www == 'true'
+    dest: "{{ apache_dir }}"
+  when: import_www | bool
 
 - name: Ensure directories are 0755
   command: find {{ www_dir }} -type d -exec chmod -c 0755 {} \;
@@ -109,18 +121,14 @@
     recurse: yes
     owner: www-data
     group: www-data
+  notify: restart apache2
 
 - name: Render htaccess file for rewrites
   become: true
   template:
     src: "/{{ destination }}/provisioners/roles/wordpress/templates/.htaccess.j2"
     dest: "{{ apache_dir }}/.htaccess"
+  notify: restart apache2
 
 - name: Enable the Rewrite Module
   shell: "sudo a2enmod rewrite"
-
-- name: Enable apache
-  service:
-   name: apache2
-   state: started
-   enabled: true
