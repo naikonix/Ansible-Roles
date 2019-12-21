@@ -1,3 +1,12 @@
 Options +FollowSymlinks
-RewriteEngine on
-rewriterule ^wp-content/uploads/(.*)$ {{ url_cloudfront }}$1 [r=301,nc]
+RewriteEngine On
+RewriteRule ^wp-content/uploads/(.*)$ {{ url_cloudfront }}$1 [r=301,nc,l]
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
