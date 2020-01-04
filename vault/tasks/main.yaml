@@ -69,7 +69,7 @@
     group: vault
     mode: '0640'
 
-- name: Render vault Systemd Config
+- name: Render Vault Systemd Config
   template:
     src: "/{{ destination }}/provisioners/roles/vault/templates/vault.systemd.j2"
     dest: /etc/systemd/system/vault.service
